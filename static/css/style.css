@@ -1,4 +1,3 @@
-
 /* =========================================================
    AI ADAPTIVE AUTHENTICATION
    PREMIUM UI / UX DESIGN SYSTEM
@@ -1288,6 +1287,211 @@ textarea:focus-visible {
         overflow-x: auto;
         flex-wrap: nowrap;
         padding-bottom: 4px;
+    }
+}
+
+/* =========================================================
+   16b. EXTRA-SMALL / SHORT SCREENS (>= ~400x580)
+   Covers narrow phones and short viewports (landscape-ish
+   small phones, split-screen, small browser windows).
+   ========================================================= */
+
+@media (max-width: 400px) {
+    :root {
+        --gutter: 14px;
+    }
+
+    .container {
+        width: calc(100% - 24px);
+        padding: 20px 0 40px;
+    }
+
+    .navbar {
+        width: calc(100% - 16px);
+        margin-top: 10px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        gap: 10px;
+    }
+
+    .brand {
+        font-size: 0.82rem;
+    }
+
+    .navbar a {
+        padding: 7px 8px;
+        font-size: 0.72rem;
+        border-radius: 10px;
+    }
+
+    h1 {
+        font-size: clamp(1.65rem, 9vw, 2.1rem);
+        letter-spacing: -0.02em;
+    }
+
+    h2 {
+        font-size: clamp(1.35rem, 7vw, 1.7rem);
+    }
+
+    h3 {
+        font-size: 1.05rem;
+    }
+
+    p {
+        font-size: 0.88rem;
+    }
+
+    body.page-home .hero {
+        padding: 24px 0 12px;
+    }
+
+    body.page-home .tagline {
+        font-size: 0.95rem;
+    }
+
+    body.page-home .subtitle {
+        font-size: 0.88rem;
+    }
+
+    .status-pill {
+        padding: 8px 12px;
+        font-size: 0.72rem;
+    }
+
+    .hero-actions {
+        margin: 20px 0 28px;
+        gap: 8px;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        min-height: 42px;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        border-radius: 12px;
+    }
+
+    .card,
+    .feature-card {
+        padding: 16px;
+        border-radius: 16px;
+        min-height: 0;
+    }
+
+    .card strong {
+        font-size: 1.5rem;
+    }
+
+    .feature-card {
+        min-height: 0;
+    }
+
+    table {
+        border-radius: 12px;
+        margin: 14px 0 22px;
+    }
+
+    th,
+    td {
+        padding: 9px 10px;
+        font-size: 0.78rem;
+    }
+
+    /* Auth pages: short viewports need auth box to scroll
+       instead of forcing full-viewport centering, and tighter
+       internal spacing so a 580px-tall window still fits. */
+    body.page-login,
+    body.page-register,
+    body.page-otp,
+    body.page-account-protected {
+        min-height: 100svh;
+        padding: 16px;
+        align-items: flex-start;
+        overflow-y: auto;
+    }
+
+    .auth-box {
+        width: 100%;
+        padding: 20px 16px;
+        border-radius: 18px;
+        margin: 8px 0;
+    }
+
+    .auth-box h2 {
+        margin-bottom: 16px;
+        font-size: 1.4rem;
+    }
+
+    .auth-box label {
+        margin: 10px 0 6px;
+        font-size: 0.78rem;
+    }
+
+    .auth-box input {
+        min-height: 42px;
+        padding: 9px 11px;
+        font-size: 0.88rem;
+    }
+
+    .auth-box button {
+        min-height: 44px;
+        margin-top: 16px;
+        font-size: 0.9rem;
+    }
+
+    .error,
+    .success,
+    .hint {
+        padding: 9px 11px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Height-constrained viewports (e.g. 400x580 and shorter):
+   trim vertical rhythm regardless of width so content isn't
+   clipped or forced into heavy scrolling. */
+@media (max-height: 600px) {
+    body.page-login,
+    body.page-register,
+    body.page-otp,
+    body.page-account-protected {
+        min-height: 100svh;
+        align-items: flex-start;
+        padding-top: 14px;
+        padding-bottom: 14px;
+    }
+
+    .auth-box {
+        padding: 18px 20px;
+        margin: 6px 0;
+        animation-duration: 0.4s;
+    }
+
+    .auth-box h2 {
+        margin-bottom: 14px;
+        font-size: 1.35rem;
+    }
+
+    .auth-box label {
+        margin: 8px 0 5px;
+    }
+
+    .auth-box input {
+        min-height: 40px;
+    }
+
+    .auth-box button {
+        margin-top: 14px;
+        min-height: 42px;
+    }
+
+    body.page-home .hero {
+        padding: 16px 0 8px;
+    }
+
+    .container {
+        padding-top: 16px;
+        padding-bottom: 24px;
     }
 }
 
