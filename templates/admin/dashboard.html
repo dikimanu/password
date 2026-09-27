@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block body_class %}page-admin{% endblock %}
+{% block content %}
+<h2>Admin Dashboard</h2>
+<div class="cards">
+    <div class="card">Total Users<br><strong>{{ total_users }}</strong></div>
+    <div class="card">Login Attempts<br><strong>{{ total_attempts }}</strong></div>
+    <div class="card">Failed Attempts<br><strong>{{ failed_attempts }}</strong></div>
+    <div class="card">Suspicious Events<br><strong>{{ suspicious_events }}</strong></div>
+    <div class="card">Protected Accounts<br><strong>{{ protected_accounts }}</strong></div>
+</div>
+
+<h3>Attack Categories</h3>
+<table>
+    <tr><th>Category</th><th>Count</th></tr>
+    {% for cat, count in attack_categories.items() %}
+    <tr><td>{{ cat }}</td><td>{{ count }}</td></tr>
+    {% endfor %}
+</table>
+
+<p><a href="{{ url_for('admin.attacks') }}">View all login attempts</a> |
+   <a href="{{ url_for('admin.security_events') }}">View all security events</a></p>
+{% endblock %}

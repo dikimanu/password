@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block body_class %}page-home{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Welcome, {{ user.username }} 👋</h1>
+    <h2 class="tagline">AI Password Attack Detector</h2>
+    <p class="subtitle">
+        Your account is protected by an adaptive authentication system that watches
+        login behavior in real time and reacts automatically to suspicious activity.
+    </p>
+
+    <div class="status-strip">
+        <div class="status-pill status-{{ user.account_status|lower }}">
+            Account: {{ user.account_status }}
+        </div>
+        <div class="status-pill risk-{{ user.risk_level|lower }}">
+            Current Risk: {{ user.risk_level }}
+        </div>
+    </div>
+
+    <div class="hero-actions">
+        <a class="btn-primary" href="{{ url_for('user.dashboard') }}">Go to Dashboard</a>
+        <a class="btn-secondary" href="{{ url_for('user.login_history') }}">View Login History</a>
+        <a class="btn-secondary" href="{{ url_for('user.security') }}">View Security Events</a>
+    </div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>🧠 AI Risk Analysis</h3>
+            <p>Every login is scored by a machine learning model trained to recognize
+               brute-force, password-spraying, and credential-stuffing patterns.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🔐 Adaptive OTP</h3>
+            <p>Verification steps up automatically — from nothing, to extra checks,
+               to a one-time code — based on how risky a login looks.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🛡️ Account Protection</h3>
+            <p>If activity crosses a critical threshold, your account is temporarily
+               locked down until you verify it's really you.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

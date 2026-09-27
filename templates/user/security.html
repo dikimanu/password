@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Security{% endblock %}
+{% block body_class %}page-security{% endblock %}
+{% block content %}
+<h2>Security Events</h2>
+<table>
+    <tr><th>Time</th><th>Type</th><th>Risk Level</th><th>Description</th></tr>
+    {% for e in events %}
+    <tr>
+        <td>{{ e.timestamp }}</td>
+        <td>{{ e.event_type }}</td>
+        <td>{{ e.risk_level }}</td>
+        <td>{{ e.description }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

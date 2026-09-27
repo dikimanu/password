@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+database/app.db
+ml/trained_models/*.pkl
+ml/datasets/*.csv
+.venv/
+venv/

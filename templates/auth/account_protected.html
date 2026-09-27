@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Account Protected</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="page-account-protected">
+<main class="container auth-box">
+    <h2>Account Temporarily Protected</h2>
+    <p>Unusual activity was detected on your account. Verify your identity via OTP to regain access.</p>
+    <a href="{{ url_for('auth.login_page') }}">Back to login</a>
+</main>
+</body>
+</html>
