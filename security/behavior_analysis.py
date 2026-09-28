@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from security.event_logger import get_recent_attempts, get_attempts_by_identifier
 from security.device_detection import is_known_device, has_any_known_device
 
@@ -10,7 +10,7 @@ def build_features(user_id, identifier, ip_address, user_agent):
     recent = get_recent_attempts(user_id, limit=20) if user_id else []
     id_recent = get_attempts_by_identifier(identifier, limit=20)
 
-    now = datetime.now()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)  # UTC, matches SQLite timestamps
     window_start = now - timedelta(minutes=10)
 
     attempts_in_window = 0
@@ -33,7 +33,8 @@ def build_features(user_id, identifier, ip_address, user_agent):
     has_history = 1 if (user_id and has_any_known_device(user_id)) else 0
     new_device_flag = 1 if (has_history and not known_device) else 0
 
-    unusual_hour = 1 if (now.hour < 5 or now.hour > 23) else 0
+    local_hour = datetime.now().hour
+    unusual_hour = 1 if (local_hour < 5 or local_hour > 23) else 0
 
     features = {
         "attempts_in_window": attempts_in_window,

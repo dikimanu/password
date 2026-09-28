@@ -15,6 +15,18 @@ class Config:
     OTP_LENGTH = 6
     OTP_EXPIRY_SECONDS = 300
 
+    # Email (Gmail SMTP) — set these as environment variables, never hardcode
+    SMTP_SERVER = "smtp.gmail.com"
+    SMTP_PORT = 587
+    SMTP_EMAIL = os.environ.get("SMTP_EMAIL")
+    SMTP_APP_PASSWORD = os.environ.get("SMTP_APP_PASSWORD")
+    EMAIL_OTP_ENABLED = bool(os.environ.get("SMTP_EMAIL")) and bool(os.environ.get("SMTP_APP_PASSWORD"))
+
+        # SMS (Fast2SMS) - optional
+    SMS_PROVIDER = os.environ.get("SMS_PROVIDER", "").lower()
+    FAST2SMS_API_KEY = os.environ.get("FAST2SMS_API_KEY")
+    SMS_OTP_ENABLED = SMS_PROVIDER == "fast2sms" and bool(FAST2SMS_API_KEY)
+
     RISK_LOW_MAX = 0.3
     RISK_MEDIUM_MAX = 0.6
     RISK_HIGH_MAX = 0.85

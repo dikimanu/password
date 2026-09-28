@@ -1,37 +1,38 @@
 from security.event_logger import log_security_event
 from security.account_protection import protect_account
-from auth.otp import generate_otp
+from auth.otp import generate_otp, otp_message
+from models.user_model import get_user_by_id
 
 
 def decide_action(user_id, risk_assessment):
-    """Deterministic rules that decide the actual security action,
-    based on the AI-produced risk level."""
-
     risk_level = risk_assessment["risk_level"]
     attack_category = risk_assessment["attack_category"]
+    user = get_user_by_id(user_id) if user_id else None
+    email = user["email"] if user else None
+    phone = user["phone"] if user else None
 
     if risk_level == "LOW":
         return {"action": "ALLOW", "require_otp": False, "message": "Normal login."}
 
     if risk_level == "MEDIUM":
         log_security_event(user_id, "ADDITIONAL_VERIFICATION",
-                            f"Medium risk detected ({attack_category})", risk_level)
+                           f"Medium risk detected ({attack_category})", risk_level)
         return {"action": "ADDITIONAL_VERIFICATION", "require_otp": False,
                 "message": "Additional verification required."}
 
     if risk_level == "HIGH":
         log_security_event(user_id, "OTP_REQUIRED",
-                            f"High risk detected ({attack_category})", risk_level)
-        if user_id:
-            generate_otp(user_id)
+                           f"High risk detected ({attack_category})", risk_level)
+        sent = generate_otp(user_id, email=email, phone=phone) if user_id else []
         return {"action": "OTP_REQUIRED", "require_otp": True,
-                "message": "OTP verification required."}
+                "message": "OTP verification required. " + otp_message(sent)}
 
     # CRITICAL
     log_security_event(user_id, "CRITICAL_RISK",
-                        f"Critical risk detected ({attack_category})", risk_level)
+                       f"Critical risk detected ({attack_category})", risk_level)
+    sent = []
     if user_id:
         protect_account(user_id, reason=f"Critical risk: {attack_category}")
-        generate_otp(user_id)
+        sent = generate_otp(user_id, email=email, phone=phone)
     return {"action": "ACCOUNT_PROTECTED", "require_otp": True,
-            "message": "Account temporarily protected. OTP verification required."}
+            "message": "Account temporarily protected. " + otp_message(sent)}

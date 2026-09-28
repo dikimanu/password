@@ -9,7 +9,7 @@
 <main class="container auth-box">
     <h2>OTP Verification</h2>
     <p>{{ message }}</p>
-    <p class="hint">Check the server console for your development OTP code.</p>
+    
     <form method="POST" action="{{ url_for('auth.verify_otp_route') }}">
         <input type="hidden" name="user_id" value="{{ user_id }}">
         <label>Enter OTP</label>

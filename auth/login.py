@@ -1,5 +1,6 @@
 from models.user_model import get_user_by_username_or_email
 from auth.password import verify_password
+from auth.otp import generate_otp, otp_message
 from security.event_logger import log_login_attempt
 from security.risk_engine import assess_risk
 from security.policy_engine import decide_action
@@ -14,7 +15,9 @@ def login_user(identifier, password, ip_address=None, user_agent=None):
         return {"success": False, "message": "Invalid credentials."}
 
     if user["account_status"] == "PROTECTED":
-        return {"success": False, "message": "Account is temporarily protected. Verify OTP to continue.",
+        sent = generate_otp(user["id"], email=user["email"], phone=user["phone"])
+        return {"success": False,
+                "message": "Account is temporarily protected. " + otp_message(sent),
                 "action": "OTP_REQUIRED", "user_id": user["id"]}
 
     if not verify_password(password, user["password_hash"]):
