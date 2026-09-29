@@ -7,7 +7,7 @@
     <tr><th>Time</th><th>Type</th><th>Risk Level</th><th>Description</th></tr>
     {% for e in events %}
     <tr>
-        <td>{{ e.timestamp }}</td>
+        <td>{{ e.timestamp|local }}</td>
         <td>{{ e.event_type }}</td>
         <td>{{ e.risk_level }}</td>
         <td>{{ e.description }}</td>

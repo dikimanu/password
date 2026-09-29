@@ -35,8 +35,8 @@ def generate_otp(user_id, email=None, phone=None):
     conn.close()
 
     sent_to = []
-    if email and send_otp_email(email, code):
-        sent_to.append(f"email {_mask_email(email)}")
+    if email and Config.BREVO_API_KEY and send_otp_email(email, code):
+         sent_to.append(f"email {_mask_email(email)}")
     if phone and send_otp_sms(phone, code):
         sent_to.append(f"mobile {_mask_phone(phone)}")
 

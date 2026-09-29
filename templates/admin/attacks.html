@@ -7,7 +7,7 @@
     <tr><th>Time</th><th>Identifier</th><th>Success</th><th>IP</th><th>Risk</th><th>Category</th></tr>
     {% for a in attempts %}
     <tr>
-        <td>{{ a.timestamp }}</td>
+        <td>{{ a.timestamp|local }}</td>
         <td>{{ a.identifier }}</td>
         <td>{{ 'Yes' if a.success else 'No' }}</td>
         <td>{{ a.ip_address }}</td>

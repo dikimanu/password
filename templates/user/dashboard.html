@@ -17,8 +17,8 @@
     <tr><th>Time</th><th>Success</th><th>IP</th><th>Risk</th><th>Category</th></tr>
     {% for a in attempts %}
     <tr>
-        <td>{{ a.timestamp }}</td>
-        <td>{{ 'Yes' if a.success else 'No' }}</td>
+        <td>{{ a.timestamp|local }}</td>
+                <td>{{ 'Yes' if a.success else 'No' }}</td>
         <td>{{ a.ip_address }}</td>
         <td>{{ a.risk_level or '-' }}</td>
         <td>{{ a.attack_category or '-' }}</td>
@@ -31,8 +31,8 @@
     <tr><th>Time</th><th>Type</th><th>Description</th></tr>
     {% for e in events %}
     <tr>
-        <td>{{ e.timestamp }}</td>
-        <td>{{ e.event_type }}</td>
+        <td>{{ e.timestamp|local }}</td>
+                <td>{{ e.event_type }}</td>
         <td>{{ e.description }}</td>
     </tr>
     {% endfor %}

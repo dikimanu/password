@@ -1,15 +1,10 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-
+import json
+import urllib.request
 from config import Config
 
 
 def send_otp_email(to_email, code):
-    """Sends the OTP code to the user's email via Gmail SMTP.
-    Returns True if sent successfully, False otherwise (falls back to console)."""
-
-    if not Config.EMAIL_OTP_ENABLED:
+    if not Config.BREVO_API_KEY or not to_email:
         return False
 
     subject = "Your Security Verification Code"
@@ -20,18 +15,26 @@ def send_otp_email(to_email, code):
         f"- AI Adaptive Authentication System"
     )
 
-    msg = MIMEMultipart()
-    msg["From"] = Config.SMTP_EMAIL
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
+    payload = json.dumps({
+        "sender": {"email": Config.SMTP_EMAIL, "name": "AI Adaptive Authentication"},
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "textContent": body,
+    }).encode()
 
+    req = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=payload,
+        method="POST",
+        headers={
+            "api-key": Config.BREVO_API_KEY,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+    )
     try:
-        with smtplib.SMTP(Config.SMTP_SERVER, Config.SMTP_PORT) as server:
-            server.starttls()
-            server.login(Config.SMTP_EMAIL, Config.SMTP_APP_PASSWORD)
-            server.sendmail(Config.SMTP_EMAIL, to_email, msg.as_string())
-        return True
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return 200 <= resp.status < 300
     except Exception as e:
         print(f"[EMAIL ERROR] Failed to send OTP email: {e}", flush=True)
         return False

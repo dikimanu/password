@@ -5,11 +5,12 @@ from database.database import init_db
 from routes.auth_routes import auth_bp
 from routes.user_routes import user_bp
 from routes.admin_routes import admin_bp
-
+from timeutil import to_local
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    app.jinja_env.filters["local"] = to_local
 
     init_db()
 

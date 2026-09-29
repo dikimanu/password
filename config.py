@@ -33,3 +33,6 @@ class Config:
 
     MODEL_DIR = os.path.join(BASE_DIR, "ml", "trained_models")
     DATASET_PATH = os.path.join(BASE_DIR, "ml", "datasets", "authentication_logs.csv")
+
+    APP_TIMEZONE = "Asia/Kolkata"
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
