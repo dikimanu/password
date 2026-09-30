@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from security.event_logger import get_recent_attempts, get_attempts_by_identifier
 from security.device_detection import is_known_device, has_any_known_device
+from zoneinfo import ZoneInfo
 
 
 def build_features(user_id, identifier, ip_address, user_agent):
@@ -33,8 +34,8 @@ def build_features(user_id, identifier, ip_address, user_agent):
     has_history = 1 if (user_id and has_any_known_device(user_id)) else 0
     new_device_flag = 1 if (has_history and not known_device) else 0
 
-    local_hour = datetime.now().hour
-    unusual_hour = 1 if (local_hour < 5 or local_hour > 23) else 0
+    local_hour = datetime.now(ZoneInfo("Asia/Kolkata")).hour
+    unusual_hour = 1 if local_hour < 5 else 0
 
     features = {
         "attempts_in_window": attempts_in_window,

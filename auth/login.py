@@ -1,4 +1,4 @@
-from models.user_model import get_user_by_username_or_email
+from models.user_model import get_user_by_username_or_email, update_risk_level
 from auth.password import verify_password
 from auth.otp import generate_otp, otp_message
 from security.event_logger import log_login_attempt
@@ -33,6 +33,8 @@ def login_user(identifier, password, ip_address=None, user_agent=None):
         risk_score=risk["risk_score"], risk_level=risk["risk_level"],
         attack_category=risk["attack_category"],
     )
+
+    update_risk_level(user["id"], risk["risk_level"])  # <-- ADDED: actually save the new risk level
 
     if not is_known_device(user["id"], ip_address, user_agent):
         register_device(user["id"], ip_address, user_agent)
