@@ -15,6 +15,10 @@ def login_user(identifier, password, ip_address=None, user_agent=None):
         return {"success": False, "message": "Invalid credentials."}
 
     if user["account_status"] == "PROTECTED":
+        if user["totp_enabled"]:
+            return {"success": False,
+                    "message": "Account is temporarily protected. Enter the code from your authenticator app.",
+                    "action": "TOTP_REQUIRED", "user_id": user["id"]}
         sent = generate_otp(user["id"], email=user["email"], phone=user["phone"])
         return {"success": False,
                 "message": "Account is temporarily protected. " + otp_message(sent),
@@ -34,7 +38,7 @@ def login_user(identifier, password, ip_address=None, user_agent=None):
         attack_category=risk["attack_category"],
     )
 
-    update_risk_level(user["id"], risk["risk_level"])  # <-- ADDED: actually save the new risk level
+    update_risk_level(user["id"], risk["risk_level"])
 
     if not is_known_device(user["id"], ip_address, user_agent):
         register_device(user["id"], ip_address, user_agent)

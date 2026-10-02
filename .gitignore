@@ -6,3 +6,4 @@ ml/datasets/*.csv
 .venv/
 venv/
 *.whl
+.env

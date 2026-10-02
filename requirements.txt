@@ -5,3 +5,7 @@ pandas
 joblib==1.4.2
 gunicorn==23.0.0
 tzdata
+pyotp==2.9.0
+qrcode==7.4.2
+python-dotenv
+psycopg2-binary==2.9.10

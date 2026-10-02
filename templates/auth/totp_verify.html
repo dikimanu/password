@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Authenticator Verification</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head> <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<body class="page-totp">
+<main class="container auth-box">
+    <h2>Authenticator Verification</h2>
+    <p>{{ message }}</p>
+
+    <form method="POST" action="{{ url_for('auth.verify_totp_route') }}">
+        <input type="hidden" name="user_id" value="{{ user_id }}">
+        <label>Enter 6-digit code from your authenticator app</label>
+        <input type="text" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="6" required autofocus>
+        <button type="submit">Verify</button>
+    </form>
+</main>
+</body>
+</html>

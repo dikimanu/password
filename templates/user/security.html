@@ -2,6 +2,17 @@
 {% block title %}Security{% endblock %}
 {% block body_class %}page-security{% endblock %}
 {% block content %}
+<h2>Two-Factor Authentication</h2>
+{% if user.totp_enabled %}
+<p>Status: <strong>Enabled</strong></p>
+<form method="POST" action="{{ url_for('user.totp_disable') }}" onsubmit="return confirm('Disable two-factor authentication?');">
+    <button type="submit">Disable 2FA</button>
+</form>
+{% else %}
+<p>Status: <strong>Not enabled</strong></p>
+<a href="{{ url_for('user.totp_setup') }}"><button type="button">Enable 2FA</button></a>
+{% endif %}
+
 <h2>Security Events</h2>
 <table>
     <tr><th>Time</th><th>Type</th><th>Risk Level</th><th>Description</th></tr>

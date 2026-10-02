@@ -1,9 +1,13 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
+    DATABASE_URL = os.environ.get("DATABASE_URL")
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-this-later")
     DEBUG = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
 

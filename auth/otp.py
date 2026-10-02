@@ -19,16 +19,14 @@ def _mask_phone(phone):
 
 
 def generate_otp(user_id, email=None, phone=None):
-    """Creates an OTP and sends it by email and/or SMS.
-    Returns a list of where it was sent, e.g. ['email a***@gmail.com']."""
     code = "".join(secrets.choice(string.digits) for _ in range(Config.OTP_LENGTH))
     expires_at = (datetime.now() + timedelta(seconds=Config.OTP_EXPIRY_SECONDS)).strftime("%Y-%m-%d %H:%M:%S")
 
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE otp_codes SET used = 1 WHERE user_id = ? AND used = 0", (user_id,))
+    cursor.execute("UPDATE otp_codes SET used = 1 WHERE user_id = %s AND used = 0", (user_id,))
     cursor.execute(
-        "INSERT INTO otp_codes (user_id, code, expires_at) VALUES (?, ?, ?)",
+        "INSERT INTO otp_codes (user_id, code, expires_at) VALUES (%s, %s, %s)",
         (user_id, code, expires_at),
     )
     conn.commit()
@@ -36,7 +34,7 @@ def generate_otp(user_id, email=None, phone=None):
 
     sent_to = []
     if email and Config.BREVO_API_KEY and send_otp_email(email, code):
-         sent_to.append(f"email {_mask_email(email)}")
+        sent_to.append(f"email {_mask_email(email)}")
     if phone and send_otp_sms(phone, code):
         sent_to.append(f"mobile {_mask_phone(phone)}")
 
@@ -57,7 +55,7 @@ def verify_otp(user_id, submitted_code):
     cursor = conn.cursor()
     cursor.execute("""
         SELECT * FROM otp_codes
-        WHERE user_id = ? AND used = 0
+        WHERE user_id = %s AND used = 0
         ORDER BY id DESC LIMIT 1
     """, (user_id,))
     row = cursor.fetchone()
@@ -75,7 +73,7 @@ def verify_otp(user_id, submitted_code):
         conn.close()
         return False
 
-    cursor.execute("UPDATE otp_codes SET used = 1 WHERE id = ?", (row["id"],))
+    cursor.execute("UPDATE otp_codes SET used = 1 WHERE id = %s", (row["id"],))
     conn.commit()
     conn.close()
     return True
