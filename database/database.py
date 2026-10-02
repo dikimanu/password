@@ -49,13 +49,21 @@ def init_db():
             timestamp TEXT NOT NULL DEFAULT TO_CHAR(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
         )
     """)
+
+    cursor.execute("""
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'login_attempts' AND column_name = 'features_json'
+    """)
+    if cursor.fetchone() is None:
+        cursor.execute("ALTER TABLE login_attempts ADD COLUMN features_json TEXT")
+        
     cursor.execute("""
         SELECT column_name FROM information_schema.columns
         WHERE table_name = 'login_attempts' AND column_name = 'location'
     """)
     if cursor.fetchone() is None:
         cursor.execute("ALTER TABLE login_attempts ADD COLUMN location TEXT")
-
+    
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS security_events (
             id SERIAL PRIMARY KEY,

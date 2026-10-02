@@ -35,7 +35,7 @@ def login_user(identifier, password, ip_address=None, user_agent=None):
     log_login_attempt(
         user["id"], identifier, True, ip_address, user_agent,
         risk_score=risk["risk_score"], risk_level=risk["risk_level"],
-        attack_category=risk["attack_category"],
+        attack_category=risk["attack_category"], features=risk["features"],
     )
 
     update_risk_level(user["id"], risk["risk_level"])

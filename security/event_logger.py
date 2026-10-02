@@ -1,18 +1,22 @@
 from database.database import get_connection
+import json
+from geolocation import get_location
 
 
 def log_login_attempt(user_id, identifier, success, ip_address=None, user_agent=None,
-                       risk_score=None, risk_level=None, attack_category=None):
-    from geolocation import get_location
+                       risk_score=None, risk_level=None, attack_category=None, features=None):
     location = get_location(ip_address)
+    features_json = json.dumps(features) if features else None
 
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO login_attempts
-            (user_id, identifier, success, ip_address, location, user_agent, risk_score, risk_level, attack_category)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (user_id, identifier, int(success), ip_address, location, user_agent, risk_score, risk_level, attack_category))
+            (user_id, identifier, success, ip_address, location, user_agent,
+             risk_score, risk_level, attack_category, features_json)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (user_id, identifier, int(success), ip_address, location, user_agent,
+          risk_score, risk_level, attack_category, features_json))
     conn.commit()
     conn.close()
 
