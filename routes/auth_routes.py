@@ -14,6 +14,15 @@ from models.user_model import get_user_by_username_or_email
 auth_bp = Blueprint("auth", __name__)
 
 
+def get_client_ip():
+    """Render (and most hosts) sit behind a proxy, so the real client IP
+    arrives in X-Forwarded-For instead of request.remote_addr."""
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.remote_addr
+
+
 @auth_bp.route("/register", methods=["GET"])
 def register_page():
     return render_template("auth/register.html")
@@ -46,7 +55,7 @@ def login():
     result = login_user(
         identifier=data.get("identifier"),
         password=data.get("password"),
-        ip_address=request.remote_addr,
+        ip_address=get_client_ip(),
         user_agent=request.headers.get("User-Agent"),
     )
 
@@ -118,6 +127,7 @@ def verify_totp_route():
 def logout():
     logout_session()
     return redirect(url_for("auth.login_page"))
+
 
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():

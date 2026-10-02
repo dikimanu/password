@@ -33,6 +33,7 @@ def init_db():
         )
     """)
 
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS login_attempts (
             id SERIAL PRIMARY KEY,
@@ -40,6 +41,7 @@ def init_db():
             identifier TEXT NOT NULL,
             success INTEGER NOT NULL,
             ip_address TEXT,
+            location TEXT,
             user_agent TEXT,
             risk_score REAL,
             risk_level TEXT,
@@ -47,6 +49,12 @@ def init_db():
             timestamp TEXT NOT NULL DEFAULT TO_CHAR(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
         )
     """)
+    cursor.execute("""
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'login_attempts' AND column_name = 'location'
+    """)
+    if cursor.fetchone() is None:
+        cursor.execute("ALTER TABLE login_attempts ADD COLUMN location TEXT")
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS security_events (

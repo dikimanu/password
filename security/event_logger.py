@@ -3,13 +3,16 @@ from database.database import get_connection
 
 def log_login_attempt(user_id, identifier, success, ip_address=None, user_agent=None,
                        risk_score=None, risk_level=None, attack_category=None):
+    from geolocation import get_location
+    location = get_location(ip_address)
+
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO login_attempts
-            (user_id, identifier, success, ip_address, user_agent, risk_score, risk_level, attack_category)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (user_id, identifier, int(success), ip_address, user_agent, risk_score, risk_level, attack_category))
+            (user_id, identifier, success, ip_address, location, user_agent, risk_score, risk_level, attack_category)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (user_id, identifier, int(success), ip_address, location, user_agent, risk_score, risk_level, attack_category))
     conn.commit()
     conn.close()
 
