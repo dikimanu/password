@@ -13,7 +13,7 @@ def get_provisioning_qr_base64(username, secret, issuer="AI Adaptive Authenticat
     uri = pyotp.totp.TOTP(secret).provisioning_uri(name=username, issuer_name=issuer)
     img = qrcode.make(uri)
     buf = io.BytesIO()
-    img.save(buf, format="PNG")
+    img.save(buf)
     return base64.b64encode(buf.getvalue()).decode()
 
 

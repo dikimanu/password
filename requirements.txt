@@ -9,3 +9,4 @@ pyotp==2.9.0
 qrcode==7.4.2
 python-dotenv
 psycopg2-binary==2.9.10
+pillow==11.0.0
