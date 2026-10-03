@@ -9,6 +9,7 @@
 <main class="container auth-box">
     <h2>Authenticator Verification</h2>
     <p>{{ message }}</p>
+    <p><small>Lost your authenticator app? You can enter one of your saved backup codes instead.</small></p>
 
     <form method="POST" action="{{ url_for('auth.verify_totp_route') }}">
         <input type="hidden" name="user_id" value="{{ user_id }}">

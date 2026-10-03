@@ -94,3 +94,33 @@ def disable_totp(user_id):
     cursor.execute("UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = %s", (user_id,))
     conn.commit()
     conn.close()
+
+
+def save_backup_codes(user_id, code_hashes):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM backup_codes WHERE user_id = %s", (user_id,))  # clear any old set
+    for h in code_hashes:
+        cursor.execute(
+            "INSERT INTO backup_codes (user_id, code_hash) VALUES (%s, %s)",
+            (user_id, h)
+        )
+    conn.commit()
+    conn.close()
+
+
+def get_unused_backup_codes(user_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM backup_codes WHERE user_id = %s AND used = 0", (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+
+def mark_backup_code_used(code_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE backup_codes SET used = 1 WHERE id = %s", (code_id,))
+    conn.commit()
+    conn.close()

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta charset="UTF-8">
+    <title>Backup Codes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="page-login">
+<main class="container auth-box">
+    <h2>Save Your Backup Codes</h2>
+    <p>Two-factor authentication is now enabled. Save these 8 one-time backup codes somewhere safe — each can be used once to log in if you lose access to your authenticator app. They will not be shown again.</p>
+
+    <ul style="font-family: monospace; font-size: 1.1em;">
+        {% for code in codes %}
+        <li>{{ code }}</li>
+        {% endfor %}
+    </ul>
+
+    <p><a href="{{ url_for('user.security') }}"><button type="button">I've saved these codes — Continue</button></a></p>
+</main>
+</body>
+</html>

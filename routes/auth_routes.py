@@ -3,13 +3,15 @@ from flask import Blueprint, request, jsonify, render_template, redirect, url_fo
 from auth.register import register_user
 from auth.login import login_user
 from auth.otp import verify_otp
-from auth.totp import verify_totp_code
+from auth.totp import verify_totp_code, verify_backup_code_hash
 from auth.session import login_session, logout_session
-from models.user_model import get_user_by_id
+from models.user_model import (
+    get_user_by_id, get_user_by_username_or_email,
+    get_unused_backup_codes, mark_backup_code_used
+)
 from security.account_protection import unprotect_account
 from auth.password_reset import create_reset_token, get_valid_reset, consume_reset_token
 from notifications.email_service import send_password_reset_email
-from models.user_model import get_user_by_username_or_email
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -104,20 +106,34 @@ def verify_otp_route():
 def verify_totp_route():
     data = request.get_json() if request.is_json else request.form
     user_id = int(data.get("user_id"))
-    code = data.get("code")
+    code = (data.get("code") or "").strip()
 
     user = get_user_by_id(user_id)
 
-    if user and user["totp_enabled"] and verify_totp_code(user["totp_secret"], code):
-        if user["account_status"] == "PROTECTED":
-            unprotect_account(user_id)
-        login_session(user_id, is_admin=bool(user["is_admin"]))
-        result = {"success": True, "message": "Code verified. Login successful."}
-        if request.is_json:
-            return jsonify(result), 200
-        return redirect(url_for("user.home"))
+    if user and user["totp_enabled"]:
+        # First try as a normal 6-digit TOTP code
+        if verify_totp_code(user["totp_secret"], code):
+            if user["account_status"] == "PROTECTED":
+                unprotect_account(user_id)
+            login_session(user_id, is_admin=bool(user["is_admin"]))
+            result = {"success": True, "message": "Code verified. Login successful."}
+            if request.is_json:
+                return jsonify(result), 200
+            return redirect(url_for("user.home"))
 
-    result = {"success": False, "message": "Invalid authenticator code."}
+        # Not a valid TOTP code — try matching it against unused backup codes
+        for backup in get_unused_backup_codes(user_id):
+            if verify_backup_code_hash(code, backup["code_hash"]):
+                mark_backup_code_used(backup["id"])
+                if user["account_status"] == "PROTECTED":
+                    unprotect_account(user_id)
+                login_session(user_id, is_admin=bool(user["is_admin"]))
+                result = {"success": True, "message": "Backup code accepted. Login successful."}
+                if request.is_json:
+                    return jsonify(result), 200
+                return redirect(url_for("user.home"))
+
+    result = {"success": False, "message": "Invalid authenticator code or backup code."}
     if request.is_json:
         return jsonify(result), 400
     return render_template("auth/totp_verify.html", user_id=user_id, message=result["message"])

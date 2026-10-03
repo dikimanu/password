@@ -106,6 +106,16 @@ def init_db():
             used INTEGER NOT NULL DEFAULT 0
         )
     """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS backup_codes (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            code_hash TEXT NOT NULL,
+            used INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT TO_CHAR(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+        )
+    """)
 
     conn.commit()
     conn.close()

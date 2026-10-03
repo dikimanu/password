@@ -2,6 +2,8 @@ import pyotp
 import qrcode
 import io
 import base64
+import secrets
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 def generate_totp_secret():
@@ -22,3 +24,15 @@ def verify_totp_code(secret, code):
         return False
     totp = pyotp.TOTP(secret)
     return totp.verify((code or "").strip(), valid_window=1)
+
+def generate_backup_codes(count=8):
+    """Returns a list of plaintext codes to show the user once."""
+    return [secrets.token_hex(4) for _ in range(count)]  # e.g. 'a1b2c3d4'
+
+
+def hash_backup_code(code):
+    return generate_password_hash(code)
+
+
+def verify_backup_code_hash(code, code_hash):
+    return check_password_hash(code_hash, code)
