@@ -13,9 +13,8 @@
 
     <form method="POST" action="{{ url_for('auth.verify_totp_route') }}">
         <input type="hidden" name="user_id" value="{{ user_id }}">
-        <label>Enter 6-digit code from your authenticator app</label>
-        <input type="text" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="6" required autofocus>
-        <button type="submit">Verify</button>
+<label>Enter code from your authenticator app or a backup code</label>        <input type="text" name="code" maxlength="8" required autofocus>
+                <button type="submit">Verify</button>
     </form>
 </main>
 </body>
