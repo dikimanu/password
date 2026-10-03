@@ -1,8 +1,8 @@
 from functools import wraps
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, flash
 
-from auth.session import is_logged_in, is_admin
-from models.user_model import get_all_users
+from auth.session import is_logged_in, is_admin, current_user_id
+from models.user_model import get_all_users, get_user_by_id, delete_user
 from security.event_logger import get_all_login_attempts, get_all_security_events
 
 admin_bp = Blueprint("admin", __name__)
@@ -15,6 +15,30 @@ def admin_required(f):
             return redirect(url_for("auth.login_page"))
         return f(*args, **kwargs)
     return wrapper
+
+
+@admin_bp.route("/users")
+@admin_required
+def users():
+    all_users = get_all_users()
+    return render_template("admin/users.html", users=all_users)
+
+
+@admin_bp.route("/users/<int:user_id>/delete", methods=["POST"])
+@admin_required
+def delete_user_route(user_id):
+    if user_id == current_user_id():
+        flash("You can't delete your own account while logged in.")
+        return redirect(url_for("admin.users"))
+
+    target = get_user_by_id(user_id)
+    if target is None:
+        flash("User not found.")
+        return redirect(url_for("admin.users"))
+
+    delete_user(user_id)
+    flash(f"User '{target['username']}' was deleted.")
+    return redirect(url_for("admin.users"))
 
 
 @admin_bp.route("/dashboard")

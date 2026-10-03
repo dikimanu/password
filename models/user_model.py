@@ -1,7 +1,18 @@
 from database.database import get_connection
 from auth.password import hash_password
 
-
+def delete_user(user_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM login_attempts WHERE user_id = %s", (user_id,))
+    cursor.execute("DELETE FROM security_events WHERE user_id = %s", (user_id,))
+    cursor.execute("DELETE FROM otp_codes WHERE user_id = %s", (user_id,))
+    cursor.execute("DELETE FROM known_devices WHERE user_id = %s", (user_id,))
+    cursor.execute("DELETE FROM password_resets WHERE user_id = %s", (user_id,))
+    cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+    conn.commit()
+    conn.close()
+    
 def create_user(username, email, phone, plain_password, is_admin=0):
     conn = get_connection()
     cursor = conn.cursor()
