@@ -1,11 +1,11 @@
-from models.user_model import get_user_by_username_or_email, update_risk_level
+from models.user_model import get_user_by_username_or_email, update_risk_level, get_user_by_id
 from auth.password import verify_password
 from auth.otp import generate_otp, otp_message
 from security.event_logger import log_login_attempt
 from security.risk_engine import assess_risk
 from security.policy_engine import decide_action
 from security.device_detection import is_known_device, register_device
-from notifications.email_service import send_attacker_keystroke_alert
+from notifications.email_service import send_attacker_keystroke_alert, send_otp_email
 from geolocation import get_location
 from database.database import get_connection
 
@@ -17,6 +17,22 @@ def user_has_biometrics(user_id):
     res = cursor.fetchone()
     conn.close()
     return res["count"] > 0 if res else False
+
+
+def resend_otp_code(user_id):
+    user = get_user_by_id(user_id)
+    if not user:
+        return {"success": False, "message": "User not found."}
+    
+    sent = generate_otp(user["id"], email=user["email"], phone=user["phone"])
+    has_bio = user_has_biometrics(user["id"])
+    return {
+        "success": True,
+        "message": "A new verification code has been sent. " + otp_message(sent),
+        "user_id": user["id"],
+        "has_biometric": has_bio,
+        "identifier": user["username"]
+    }
 
 
 def login_user(identifier, password, ip_address=None, user_agent=None):

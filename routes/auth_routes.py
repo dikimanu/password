@@ -3,7 +3,7 @@ import os
 import base64
 
 from auth.register import register_user
-from auth.login import login_user, user_has_biometrics
+from auth.login import login_user, user_has_biometrics, resend_otp_code
 from auth.otp import verify_otp
 from auth.totp import verify_totp_code, verify_backup_code_hash
 from auth.session import login_session, logout_session
@@ -143,6 +143,28 @@ def verify_otp_route():
     return render_template("auth/otp.html", user_id=user_id, message=result["message"], has_biometric=has_bio, identifier=user["username"] if user else "")
 
 
+@auth_bp.route("/resend-otp", methods=["POST"])
+def resend_otp_route():
+    data = request.get_json() if request.is_json else request.form
+    user_id = data.get("user_id")
+    identifier = data.get("identifier")
+
+    if not user_id:
+        return redirect(url_for("auth.login_page"))
+
+    result = resend_otp_code(int(user_id))
+    has_bio = user_has_biometrics(int(user_id))
+    user = get_user_by_id(int(user_id))
+
+    return render_template(
+        "auth/otp.html",
+        user_id=user_id,
+        message=result["message"],
+        has_biometric=has_bio,
+        identifier=identifier or (user["username"] if user else "")
+    )
+
+
 @auth_bp.route("/verify-totp", methods=["POST"])
 def verify_totp_route():
     data = request.get_json() if request.is_json else request.form
@@ -228,3 +250,5 @@ def reset_password(token):
 
     consume_reset_token(token, new_password)
     return render_template("auth/reset_password.html", token=token, invalid=False, success=True)
+
+
