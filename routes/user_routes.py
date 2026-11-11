@@ -120,6 +120,19 @@ def biometric_register():
     return jsonify({"success": True, "message": "Biometric credential registered successfully."})
 
 
+@user_bp.route("/biometric/disable", methods=["POST"])
+@login_required
+def biometric_disable():
+    user_id = current_user_id()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM user_credentials WHERE user_id = %s", (user_id,))
+    conn.commit()
+    conn.close()
+    flash("Biometric passkey removed.")
+    return redirect(url_for("user.security"))
+
+
 @user_bp.route("/2fa/setup", methods=["GET", "POST"])
 @login_required
 def totp_setup():
@@ -171,5 +184,3 @@ def regenerate_backup_codes():
     hashed = [hash_backup_code(c) for c in plain_codes]
     save_backup_codes(user_id, hashed)
     return render_template("user/totp_backup_codes.html", codes=plain_codes)
-
-
