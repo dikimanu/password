@@ -94,7 +94,12 @@ def biometric_register_options():
         },
         "pubKeyCredParams": [{"alg": -7, "type": "public-key"}, {"alg": -257, "type": "public-key"}],
         "timeout": 60000,
-        "attestation": "none"
+        "attestation": "none",
+        "authenticatorSelection": {
+            "authenticatorAttachment": "platform",
+            "userVerification": "required",
+            "residentKey": "preferred"
+        }
     }
     return jsonify(options)
 
@@ -126,7 +131,7 @@ def totp_setup():
 
     if request.method == "POST":
         code = request.form.get("code")
-        secret = request.form.get("secret")  # hidden field carries the pending secret
+        secret = request.form.get("secret")
         if verify_totp_code(secret, code):
             set_totp_secret(user_id, secret)
             enable_totp(user_id)
@@ -166,3 +171,5 @@ def regenerate_backup_codes():
     hashed = [hash_backup_code(c) for c in plain_codes]
     save_backup_codes(user_id, hashed)
     return render_template("user/totp_backup_codes.html", codes=plain_codes)
+
+

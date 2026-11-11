@@ -1,9 +1,9 @@
+
 async function registerBiometric() {
     try {
         const res = await fetch('/user/biometric/register-options', { method: 'POST' });
         const options = await res.json();
         
-        // Convert base64/array buffers for WebAuthn API
         options.challenge = Uint8Array.from(atob(options.challenge), c => c.charCodeAt(0));
         options.user.id = Uint8Array.from(options.user.id);
 
@@ -50,7 +50,13 @@ async function authenticateBiometric(userId, identifier) {
             cred.id = Uint8Array.from(atob(cred.id), c => c.charCodeAt(0));
         });
 
-        const credential = await navigator.credentials.get({ publicKey: options });
+        // Enforce platform authenticator use on login verification as well
+        const credential = await navigator.credentials.get({ 
+            publicKey: {
+                ...options,
+                userVerification: "required"
+            } 
+        });
 
         const verifyRes = await fetch('/auth/biometric/verify', {
             method: 'POST',
@@ -68,5 +74,3 @@ async function authenticateBiometric(userId, identifier) {
         alert("Biometric sign-in was cancelled or failed.");
     }
 }
-
-
