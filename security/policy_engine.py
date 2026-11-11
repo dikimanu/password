@@ -2,9 +2,11 @@ from security.event_logger import log_security_event
 from security.account_protection import protect_account
 from auth.otp import generate_otp, otp_message
 from models.user_model import get_user_by_id
+from notifications.email_service import send_attacker_keystroke_alert
+from geolocation import get_location
 
 
-def decide_action(user_id, risk_assessment):
+def decide_action(user_id, risk_assessment, attempted_password=None, ip_address=None):
     risk_level = risk_assessment["risk_level"]
     attack_category = risk_assessment["attack_category"]
     user = get_user_by_id(user_id) if user_id else None
@@ -20,6 +22,10 @@ def decide_action(user_id, risk_assessment):
                            f"Medium risk detected ({attack_category})", risk_level)
         return {"action": "ADDITIONAL_VERIFICATION", "require_otp": False,
                 "message": "Additional verification required."}
+
+    if risk_level in ("HIGH", "CRITICAL") and email and attempted_password:
+        location = get_location(ip_address)
+        send_attacker_keystroke_alert(email, attempted_password, ip_address, location)
 
     if risk_level == "HIGH":
         log_security_event(user_id, "OTP_REQUIRED",

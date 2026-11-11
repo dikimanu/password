@@ -1,5 +1,7 @@
 from functools import wraps
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+import os
+import base64
+from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 
 from auth.session import is_logged_in, current_user_id
 from models.user_model import (
@@ -11,6 +13,7 @@ from auth.totp import (
     generate_totp_secret, get_provisioning_qr_base64, verify_totp_code,
     generate_backup_codes, hash_backup_code
 )
+from database.database import get_connection
 
 
 user_bp = Blueprint("user", __name__)
@@ -57,7 +60,15 @@ def security():
     user_id = current_user_id()
     user = get_user_by_id(user_id)
     events = get_security_events(user_id, limit=50)
-    return render_template("user/security.html", events=events, user=user)
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) as count FROM user_credentials WHERE user_id = %s", (user_id,))
+    bio_row = cursor.fetchone()
+    conn.close()
+    has_biometric = bio_row["count"] > 0 if bio_row else False
+
+    return render_template("user/security.html", events=events, user=user, has_biometric=has_biometric)
 
 
 @user_bp.route("/login-history")
@@ -66,6 +77,42 @@ def login_history():
     user_id = current_user_id()
     attempts = get_recent_attempts(user_id, limit=50)
     return render_template("user/login_history.html", attempts=attempts)
+
+
+@user_bp.route("/biometric/register-options", methods=["POST"])
+@login_required
+def biometric_register_options():
+    user_id = current_user_id()
+    user = get_user_by_id(user_id)
+    options = {
+        "challenge": base64.b64encode(os.urandom(32)).decode(),
+        "rp": {"name": "AI Adaptive Authentication", "id": request.host.split(":")[0]},
+        "user": {
+            "id": list(str(user["id"]).encode()),
+            "name": user["username"],
+            "displayName": user["username"],
+        },
+        "pubKeyCredParams": [{"alg": -7, "type": "public-key"}, {"alg": -257, "type": "public-key"}],
+        "timeout": 60000,
+        "attestation": "none"
+    }
+    return jsonify(options)
+
+
+@user_bp.route("/biometric/register", methods=["POST"])
+@login_required
+def biometric_register():
+    data = request.get_json()
+    user_id = current_user_id()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO user_credentials (user_id, credential_id, public_key)
+        VALUES (%s, %s, %s) ON CONFLICT (credential_id) DO NOTHING
+    """, (user_id, data.get("credentialId"), data.get("publicKey")))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": "Biometric credential registered successfully."})
 
 
 @user_bp.route("/2fa/setup", methods=["GET", "POST"])

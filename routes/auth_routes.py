@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for
+import os
+import base64
 
 from auth.register import register_user
-from auth.login import login_user
+from auth.login import login_user, user_has_biometrics
 from auth.otp import verify_otp
 from auth.totp import verify_totp_code, verify_backup_code_hash
 from auth.session import login_session, logout_session
@@ -12,13 +14,12 @@ from models.user_model import (
 from security.account_protection import unprotect_account
 from auth.password_reset import create_reset_token, get_valid_reset, consume_reset_token
 from notifications.email_service import send_password_reset_email
+from database.database import get_connection
 
 auth_bp = Blueprint("auth", __name__)
 
 
 def get_client_ip():
-    """Render (and most hosts) sit behind a proxy, so the real client IP
-    arrives in X-Forwarded-For instead of request.remote_addr."""
     forwarded = request.headers.get("X-Forwarded-For", "")
     if forwarded:
         return forwarded.split(",")[0].strip()
@@ -46,6 +47,42 @@ def register():
     return render_template("auth/register.html", result=result)
 
 
+@auth_bp.route("/biometric/auth-options", methods=["POST"])
+def biometric_auth_options():
+    data = request.get_json()
+    identifier = data.get("identifier")
+    user = get_user_by_username_or_email(identifier)
+    if not user:
+        return jsonify({"success": False, "message": "User not found."}), 404
+        
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT credential_id FROM user_credentials WHERE user_id = %s", (user["id"],))
+    creds = cursor.fetchall()
+    conn.close()
+    
+    options = {
+        "challenge": base64.b64encode(os.urandom(32)).decode(),
+        "allowCredentials": [{"id": c["credential_id"], "type": "public-key"} for c in creds],
+        "timeout": 60000,
+        "user_id": user["id"]
+    }
+    return jsonify(options)
+
+
+@auth_bp.route("/biometric/verify", methods=["POST"])
+def biometric_verify():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    user = get_user_by_id(user_id)
+    if user:
+        if user["account_status"] == "PROTECTED":
+            unprotect_account(user_id)
+        login_session(user_id, is_admin=bool(user["is_admin"]))
+        return jsonify({"success": True, "redirect": url_for("user.home")})
+    return jsonify({"success": False, "message": "Verification failed."}), 400
+
+
 @auth_bp.route("/login", methods=["GET"])
 def login_page():
     return render_template("auth/login.html")
@@ -54,8 +91,9 @@ def login_page():
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json() if request.is_json else request.form
+    identifier = data.get("identifier")
     result = login_user(
-        identifier=data.get("identifier"),
+        identifier=identifier,
         password=data.get("password"),
         ip_address=get_client_ip(),
         user_agent=request.headers.get("User-Agent"),
@@ -71,10 +109,11 @@ def login():
     if request.is_json:
         return jsonify(result), status_code
 
+    has_bio = result.get("has_biometric", False)
     if result.get("action") == "TOTP_REQUIRED":
-        return render_template("auth/totp_verify.html", user_id=result.get("user_id"), message=result["message"])
+        return render_template("auth/totp_verify.html", user_id=result.get("user_id"), message=result["message"], has_biometric=has_bio, identifier=identifier)
     if result.get("action") in ("OTP_REQUIRED", "ACCOUNT_PROTECTED"):
-        return render_template("auth/otp.html", user_id=result.get("user_id"), message=result["message"])
+        return render_template("auth/otp.html", user_id=result.get("user_id"), message=result["message"], has_biometric=has_bio, identifier=identifier)
     if result["success"]:
         return redirect(url_for("user.home"))
     return render_template("auth/login.html", result=result)
@@ -99,7 +138,9 @@ def verify_otp_route():
     result = {"success": False, "message": "Invalid or expired OTP."}
     if request.is_json:
         return jsonify(result), 400
-    return render_template("auth/otp.html", user_id=user_id, message=result["message"])
+    has_bio = user_has_biometrics(user_id)
+    user = get_user_by_id(user_id)
+    return render_template("auth/otp.html", user_id=user_id, message=result["message"], has_biometric=has_bio, identifier=user["username"] if user else "")
 
 
 @auth_bp.route("/verify-totp", methods=["POST"])
@@ -111,7 +152,6 @@ def verify_totp_route():
     user = get_user_by_id(user_id)
 
     if user and user["totp_enabled"]:
-        # First try as a normal 6-digit TOTP code
         if verify_totp_code(user["totp_secret"], code):
             if user["account_status"] == "PROTECTED":
                 unprotect_account(user_id)
@@ -121,7 +161,6 @@ def verify_totp_route():
                 return jsonify(result), 200
             return redirect(url_for("user.home"))
 
-        # Not a valid TOTP code — try matching it against unused backup codes
         for backup in get_unused_backup_codes(user_id):
             if verify_backup_code_hash(code, backup["code_hash"]):
                 mark_backup_code_used(backup["id"])
@@ -136,7 +175,8 @@ def verify_totp_route():
     result = {"success": False, "message": "Invalid authenticator code or backup code."}
     if request.is_json:
         return jsonify(result), 400
-    return render_template("auth/totp_verify.html", user_id=user_id, message=result["message"])
+    has_bio = user_has_biometrics(user_id)
+    return render_template("auth/totp_verify.html", user_id=user_id, message=result["message"], has_biometric=has_bio, identifier=user["username"] if user else "")
 
 
 @auth_bp.route("/logout")
@@ -155,15 +195,10 @@ def forgot_password():
     user = get_user_by_username_or_email(email)
 
     if user:
-        print(f"[DEBUG] Found user, sending reset email to {user['email']}", flush=True)
         token = create_reset_token(user["id"])
         reset_link = url_for("auth.reset_password", token=token, _external=True)
-        sent = send_password_reset_email(user["email"], reset_link)
-        print(f"[DEBUG] send_password_reset_email returned: {sent}", flush=True)
-    else:
-        print(f"[DEBUG] No user found for email: {email!r}", flush=True)
+        send_password_reset_email(user["email"], reset_link)
 
-    # Same message whether or not the email exists, so the form can't be used to find registered emails
     message = "If that email is registered, a password reset link has been sent."
     if request.is_json:
         return jsonify({"success": True, "message": message}), 200

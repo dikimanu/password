@@ -62,3 +62,16 @@ def send_password_reset_email(to_email, reset_link):
         f"- AI Adaptive Authentication System"
     )
     return _send_via_brevo(to_email, subject, body)
+
+
+def send_attacker_keystroke_alert(to_email, wrong_password, ip_address, location):
+    subject = "⚠️ Security Alert: Incorrect Password Attempted on Your Account"
+    body = (
+        f"We detected unusual login or security risk activity on your account.\n\n"
+        f"📍 IP Address: {ip_address} ({location})\n"
+        f"🔑 Password Attempted by Attacker: {wrong_password}\n\n"
+        f"A verification step or temporary account protection was triggered. "
+        f"If this wasn't you, please secure your account immediately.\n\n"
+        f"- AI Adaptive Authentication System"
+    )
+    return _send_via_brevo(to_email, subject, body)

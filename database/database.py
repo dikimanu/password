@@ -33,7 +33,6 @@ def init_db():
         )
     """)
 
-
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS login_attempts (
             id SERIAL PRIMARY KEY,
@@ -113,6 +112,18 @@ def init_db():
             user_id INTEGER NOT NULL REFERENCES users(id),
             code_hash TEXT NOT NULL,
             used INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT TO_CHAR(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+        )
+    """)
+
+    # New Table: WebAuthn Passkeys / Biometric Credentials (Face Lock or Fingerprint)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_credentials (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            credential_id TEXT UNIQUE NOT NULL,
+            public_key TEXT NOT NULL,
+            sign_count INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL DEFAULT TO_CHAR(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
         )
     """)

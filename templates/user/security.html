@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% block title %}Security{% endblock %}
 {% block body_class %}page-security{% endblock %}
@@ -11,6 +12,20 @@
 {% else %}
 <p>Status: <strong>Not enabled</strong></p>
 <a href="{{ url_for('user.totp_setup') }}"><button type="button">Enable 2FA</button></a>
+{% endif %}
+
+<hr style="margin: 20px 0; border:0; border-top:1px solid #ddd;">
+
+<h2>Biometric Passkeys (Face / Fingerprint)</h2>
+<p>Status: <strong>{{ 'Enabled' if has_biometric else 'Not enabled' }}</strong></p>
+{% if not has_biometric %}
+<button type="button" id="enable-bio-btn" class="btn-primary">Enable Face / Fingerprint</button>
+<script src="{{ url_for('static', filename='js/biometric.js') }}"></script>
+<script>
+document.getElementById('enable-bio-btn').addEventListener('click', registerBiometric);
+</script>
+{% else %}
+<p><small>Your device biometric passkey is active and ready for step-up verification.</small></p>
 {% endif %}
 
 <h2>Security Events</h2>

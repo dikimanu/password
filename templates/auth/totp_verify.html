@@ -1,10 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Authenticator Verification</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head> <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <body class="page-totp">
 <main class="container auth-box">
     <h2>Authenticator Verification</h2>
@@ -13,9 +15,23 @@
 
     <form method="POST" action="{{ url_for('auth.verify_totp_route') }}">
         <input type="hidden" name="user_id" value="{{ user_id }}">
-<label>Enter code from your authenticator app or a backup code</label>        <input type="text" name="code" maxlength="8" required autofocus>
-                <button type="submit">Verify</button>
+        <label>Enter code from your authenticator app or a backup code</label>
+        <input type="text" name="code" maxlength="8" required autofocus>
+        <button type="submit">Verify</button>
     </form>
+
+    {% if has_biometric %}
+    <hr style="margin: 15px 0; border:0; border-top:1px solid #ddd;">
+    <button type="button" id="bio-verify-btn" style="width: 100%; margin-top: 5px; background-color: #2b7a78; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">
+        🔑 Verify with Face / Fingerprint
+    </button>
+    <script src="{{ url_for('static', filename='js/biometric.js') }}"></script>
+    <script>
+    document.getElementById('bio-verify-btn').addEventListener('click', () => {
+        authenticateBiometric("{{ user_id }}", "{{ identifier }}");
+    });
+    </script>
+    {% endif %}
 </main>
 </body>
 </html>
