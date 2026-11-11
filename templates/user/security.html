@@ -6,11 +6,13 @@
 {% if user.totp_enabled %}
 <p>Status: <strong>Enabled</strong></p>
 <form method="POST" action="{{ url_for('user.totp_disable') }}" onsubmit="return confirm('Disable two-factor authentication?');">
-    <button type="submit">Disable 2FA</button>
+    <button type="submit" style="background-color: #d9534f; color: white; padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Disable 2FA</button>
 </form>
 {% else %}
 <p>Status: <strong>Not enabled</strong></p>
-<a href="{{ url_for('user.totp_setup') }}"><button type="button">Enable 2FA</button></a>
+<a href="{{ url_for('user.totp_setup') }}" style="text-decoration: none;">
+    <button type="button" style="background: linear-gradient(135deg, #f5a623 0%, #f76b1c 100%); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(247, 107, 28, 0.3);">Enable 2FA</button>
+</a>
 {% endif %}
 
 <hr style="margin: 20px 0; border:0; border-top:1px solid #ddd;">
@@ -18,7 +20,7 @@
 <h2>Biometric Passkeys (Face / Fingerprint)</h2>
 <p>Status: <strong>{{ 'Enabled' if has_biometric else 'Not enabled' }}</strong></p>
 {% if not has_biometric %}
-<button type="button" id="enable-bio-btn" class="btn-primary">Enable Face / Fingerprint</button>
+<button type="button" id="enable-bio-btn" style="background: linear-gradient(135deg, #f5a623 0%, #f76b1c 100%); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(247, 107, 28, 0.3);">Enable Face / Fingerprint</button>
 <script src="{{ url_for('static', filename='js/biometric.js') }}"></script>
 <script>
 document.getElementById('enable-bio-btn').addEventListener('click', registerBiometric);
@@ -26,20 +28,31 @@ document.getElementById('enable-bio-btn').addEventListener('click', registerBiom
 {% else %}
 <p><small>Your device biometric passkey is active and ready for step-up verification.</small></p>
 <form method="POST" action="{{ url_for('user.biometric_disable') }}" onsubmit="return confirm('Remove your biometric passkey?');">
-    <button type="submit" style="background-color: #d9534f; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; margin-top: 5px;">Remove Passkey</button>
+    <button type="submit" style="background-color: #d9534f; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; margin-top: 5px; font-weight: 600;">Remove Passkey</button>
 </form>
 {% endif %}
 
+<hr style="margin: 20px 0; border:0; border-top:1px solid #ddd;">
+
 <h2>Security Events</h2>
-<table>
-    <tr><th>Time</th><th>Type</th><th>Risk Level</th><th>Description</th></tr>
-    {% for e in events %}
-    <tr>
-        <td>{{ e.timestamp|local }}</td>
-        <td>{{ e.event_type }}</td>
-        <td>{{ e.risk_level }}</td>
-        <td>{{ e.description }}</td>
-    </tr>
-    {% endfor %}
+<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+    <thead>
+        <tr style="text-align: left;">
+            <th style="padding: 10px; border-bottom: 1px solid #444;">Time</th>
+            <th style="padding: 10px; border-bottom: 1px solid #444;">Type</th>
+            <th style="padding: 10px; border-bottom: 1px solid #444;">Risk Level</th>
+            <th style="padding: 10px; border-bottom: 1px solid #444;">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for e in events %}
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #333;">{{ e.timestamp|local }}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #333;">{{ e.event_type }}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #333;">{{ e.risk_level }}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #333;">{{ e.description }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
 {% endblock %}
